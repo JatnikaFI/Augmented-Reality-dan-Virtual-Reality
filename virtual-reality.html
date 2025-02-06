@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VR With Event & Animation</title>
+
+  <!-- A-Frame dan ekstensi tambahan -->
+  <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.0/dist/aframe-extras.min.js"></script>
+  <script src="https://unpkg.com/aframe-event-set-component@5.0.0/dist/aframe-event-set-component.min.js"></script>
+  <script src="https://unpkg.com/aframe-proxy-event-component/dist/aframe-proxy-event-component.min.js"></script>
+  <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
+  <script src="https://unpkg.com/super-hands@3.0.0/dist/super-hands.min.js"></script>
+
+  <style>
+    /* Cursor custom untuk tombol interaktif */
+    .a-grab-cursor {
+      cursor: crosshair !important;
+    }
+
+    .a-grab-cursor:active {
+      cursor: grabbing !important;
+    }
+  </style>
+
+  <script>
+    // Komponen untuk tombol 'UP'
+    var number = 0;
+    AFRAME.registerComponent('tester1', {
+      init: function () {
+        var el = this.el;
+        el.addEventListener('mouseenter', function () {
+          console.log(`It works for up ${number++}`, 'font-size:2em');
+        });
+      }
+    });
+
+    // Komponen untuk tombol 'DOWN'
+    AFRAME.registerComponent('tester2', {
+      init: function () {
+        var el = this.el;
+        el.addEventListener('mouseenter', function () {
+          console.log(`It works for down ${number++}`, 'font-size:2em');
+        });
+      }
+    });
+
+    // Fungsi pengelolaan audio dan kontrol model 3D
+
+    let songs = [];
+    for (let i = 1; i <= 6; i++) {
+      songs.push(`sounds/song${i}.mp3`);
+    }
+
+    let currentSong = 0;
+    let audio = new Audio(songs[currentSong]);
+    let isRotating = false;
+
+    // Komponen rotasi kustom
+    AFRAME.registerComponent('rotate-model', {
+      schema: { speed: { type: 'number', default: 30 } },
+
+      tick: function (time, timeDelta) {
+        if (isRotating) {
+          let rotation = this.el.getAttribute('rotation');
+          rotation.y += (this.data.speed * timeDelta) / 1000;
+          this.el.setAttribute('rotation', rotation);
+        }
+      }
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      let modelEl = document.querySelector('#box');
+      modelEl.setAttribute('rotate-model', 'speed: 60');
+
+      audio.addEventListener('play', () => {
+        isRotating = true;
+      });
+
+      audio.addEventListener('pause', () => {
+        isRotating = false;
+      });
+
+      audio.addEventListener('ended', () => {
+        nextSong();
+      });
+    });
+
+    function playPause() {
+      if (audio.paused) {
+        audio.play();
+      } else {
+        audio.pause();
+      }
+    }
+
+    function nextSong() {
+      currentSong = (currentSong + 1) % songs.length;
+      audio.src = songs[currentSong];
+      audio.play();
+    }
+
+    function prevSong() {
+      currentSong = (currentSong - 1 + songs.length) % songs.length;
+      audio.src = songs[currentSong];
+      audio.play();
+    }
+  </script>
+
+  </script>
+</head>
+
+<body>
+  <a-scene>
+    <!-- Kamera dengan cursor mouse -->
+    <a-camera id="cam">
+      <a-entity cursor="rayOrigin:mouse"></a-entity>
+    </a-camera>
+
+    <!-- Tombol UP -->
+    <a-entity tester1 geometry="primitive: triangle" text__btn_up="align: center; baseline:top; value:UP; wrapCount:5"
+      position="2 2.5 -3" material="color:blue;" look-at="#cam" proxy-event__satu="event:click; as:atas; to:#box;">
+    </a-entity>
+
+    <!-- Tombol DOWN -->
+    <a-entity tester2 position="2 1 -3" text__btn_up="align:center; baseline:bottom; value:DOWN; wrapCount:10"
+      look-at="#cam">
+      <a-entity geometry="primitive:triangle" rotation="0 0 180" material="color:blue;"
+        proxy-event__satu="event:click; as:bawah; to:#box;">
+      </a-entity>
+    </a-entity>
+
+    <!-- Tombol Previous -->
+    <a-entity geometry="primitive: circle; radius: 0.3" position="-2 2.7 -3" material="color: red;" look-at="#cam"
+      text="value: Prev; align: center; width: 4" class="a-grab-cursor" onclick="prevSong()">
+    </a-entity>
+
+    <!-- Tombol Next -->
+    <a-entity geometry="primitive: circle; radius: 0.3" position="-2 1.7 -3" material="color: orange;" look-at="#cam"
+      text="value: Next; align: center; width: 4" class="a-grab-cursor" onclick="nextSong()">
+    </a-entity>
+
+    <!-- Tombol Play/Pause -->
+    <a-entity geometry="primitive: circle; radius: 0.3" position="-2 0.8 -3" material="color: green;" look-at="#cam"
+      text="value: Play/Pause; align: center; width: 2" class="a-grab-cursor" onclick="playPause()">
+    </a-entity>
+
+    <!-- Model 3D dengan animasi -->
+    <a-gltf-model grabbable id="box" position="0 0.5 -3" gltf-model="url(models3d/naruto.glb)"
+      animation__atas="property:position; to:0 2.5 -3; startEvents:atas"
+      animation__bawah="property:position; to:0 -1 -3; startEvents:bawah"
+      animation__reset="property:position; to:0 0.5 -3; startEvents:click"
+      animation__rotateModel="property: rotation; to: 0 360 0; dur: 3000; loop: true; startEvents: startRotation; pauseEvents: stopRotation">
+    </a-gltf-model>
+
+    <a-entity laser-controls="hand:rigth;color:red;"></a-entity>
+
+  </a-scene>
+</body>
+
+</html>

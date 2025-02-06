@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AR Marker</title>
+
+    <!-- Library A-Frame dan plugin tambahan -->
+    <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@6.1.0/dist/aframe-extras.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.js"></script>
+  </head>
+
+  <body style="margin: 0; overflow: hidden; font-family: Monospace;">
+    <a-scene embedded arjs="detectionMode: mono_and_matrix; matrixCodeType: 3x3_PARITY65">
+      
+      <!-- Bagian untuk memuat aset -->
+      <a-assets>
+        <!-- Model buaya 3D -->
+        <a-asset-item id="buaya" src="models3d/buaya.glb"></a-asset-item>
+        
+        <!-- Video yang akan diputar -->
+        <video id="video" webkit-playsinline playsinline src="video/luffi.mp4"></video>
+      </a-assets>
+
+      <!-- Marker Hiro untuk memutar video -->
+      <a-marker preset="hiro" id="hiro-marker">
+        <a-plane src="#video" width="2" height="1.5" position="0 1 0" rotation="-90 0 0"></a-plane>
+      </a-marker>
+
+      <!-- Marker Barcode untuk menampilkan model hewan 3D -->
+      <a-marker type="barcode" value="5">
+        <a-gltf-model
+          src="models3d/hewan.glb"
+          position="0 2 0"
+          scale="1.5 1.5 1.5"
+          rotation="0 280 0"
+          animation="property: position; to: 0 1 0; dir: alternate; loop: true; dur: 1000"
+        ></a-gltf-model>
+        <a-text value="Barcode Marker" position="0 1 0" scale="0.5 0.5 0.5"></a-text>
+      </a-marker>
+
+      <!-- Marker Pattern A untuk menampilkan model buaya dengan animasi rotasi -->
+      <a-marker type="pattern" url="data/pattern-A.patt">
+        <a-entity
+          gltf-model="#buaya"
+          scale="2 2 2"
+          position="0 0 0"
+          animation="property: rotation; to: 0 360 0; loop: true; dur: 4000"
+        ></a-entity>
+        <a-text value="Pattern A" position="0 1 0" scale="0.5 0.5 0.5"></a-text>
+      </a-marker>
+
+      <!-- Marker Kanji dengan animasi rotasi dan lompatan -->
+      <a-marker preset="kanji">
+        <a-gltf-model
+          src="models3d/doraemon.glb"
+          scale="0.5 0.5 0.5"
+          position="0 0 0"
+          animation__rotate="property: rotation; to: 0 360 0; loop: true; dur: 4000"
+          animation__jump="property: position; dir: alternate; to: 0 1 0; loop: true; dur: 1000"
+        ></a-gltf-model>
+        <a-text value="Kanji Marker" position="0 1 0" scale="0.5 0.5 0.5"></a-text>
+      </a-marker>
+
+      <!-- Marker Letter MM dengan beberapa animasi -->
+      <a-marker type="pattern" url="data/pattern-mm.patt">
+        <a-gltf-model
+          src="models3d/bird.glb"
+          scale="0.5 0.5 0.5"
+          position="0 0 0"
+          animation__rotate="property: rotation; to: 360 0 0; loop: true; dur: 4000; dir: alternate"
+          animation__circle="property: position; to: 2 1 0; loop: true; dur: 3000; easing: easeInOutQuad; dir: alternate"
+          animation__scale="property: scale; to: 0.7 0.7 0.7; loop: true; dur: 2000; dir: alternate"
+        ></a-gltf-model>
+        <a-text value="Letter Logo" position="0 1 0" scale="0.5 0.5 0.5"></a-text>
+      </a-marker>
+
+      <!-- Kamera untuk menangkap AR scene -->
+      <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+      const video = document.querySelector("#video");
+      const hiroMarker = document.querySelector("#hiro-marker");
+
+      // Event listener untuk memainkan video saat marker ditemukan
+      hiroMarker.addEventListener("markerFound", () => {
+        console.log("Hiro marker found - Playing video");
+        video.play();
+      });
+
+      // Event listener untuk menghentikan video saat marker hilang
+      hiroMarker.addEventListener("markerLost", () => {
+        console.log("Hiro marker lost - Pausing video");
+        video.pause();
+      });
+    </script>
+  </body>
+</html>
